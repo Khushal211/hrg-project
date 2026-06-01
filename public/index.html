@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HRG Construction — Smart Inventory Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#1c2330;--bg4:#21262d;--border:#30363d;--border2:#3d444d;--text1:#e6edf3;--text2:#8d96a0;--text3:#5a6270;--accent:#2ea043;--accent2:#238636;--blue:#1f6feb;--blue2:#388bfd;--warn:#d29922;--warn2:#f0883e;--danger:#da3633;--danger2:#f85149;--purple:#8b949e;--gold:#e3b341;--radius:8px;--radius2:12px;font-family:'DM Sans',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}body{background:var(--bg);color:var(--text1);font-size:13px;line-height:1.5;}
+::-webkit-scrollbar{width:6px;height:6px;}::-webkit-scrollbar-track{background:var(--bg2);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+#login-page{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;}
+#login-page.hidden{display:none;}
+.login-box{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:36px 40px;width:380px;max-width:95vw;box-shadow:0 24px 80px rgba(0,0,0,0.6);}
+.login-brand{display:flex;align-items:center;gap:12px;margin-bottom:28px;}
+.login-brand-icon{width:44px;height:44px;background:linear-gradient(135deg,var(--blue) 0%,var(--accent) 100%);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;box-shadow:0 6px 20px rgba(31,111,235,0.4);}
+.login-brand-name{font-size:16px;font-weight:700;}.login-brand-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.login-title{font-size:20px;font-weight:600;margin-bottom:6px;}.login-sub{font-size:13px;color:var(--text3);margin-bottom:22px;}
+.login-field{margin-bottom:14px;}.login-field label{display:block;font-size:11px;font-weight:500;color:var(--text2);margin-bottom:5px;}
+.login-field input{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text1);font-family:inherit;font-size:13px;outline:none;transition:border-color 0.15s;}
+.login-field input:focus{border-color:var(--blue2);}
+.login-btn{width:100%;padding:10px;background:var(--blue);border:none;border-radius:var(--radius);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.15s;margin-top:6px;}
+.login-btn:hover{background:#1158b5;}.login-error{color:var(--danger2);font-size:12px;margin-top:10px;min-height:18px;}
+.login-hint{font-size:11px;color:var(--text3);margin-top:16px;text-align:center;line-height:1.6;}
+.login-hint code{background:var(--bg3);padding:1px 5px;border-radius:4px;font-family:'DM Mono',monospace;}
+.shell{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.brand{padding:16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.brand-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--blue) 0%,var(--accent) 100%);border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 4px 12px rgba(31,111,235,0.3);}
+.brand-name{font-size:13px;font-weight:600;}.brand-sub{font-size:10px;color:var(--text3);}
+.nav-section{padding:16px 0 4px;}.nav-label{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;padding:0 16px 6px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 16px;color:var(--text2);cursor:pointer;font-size:13px;font-weight:400;border-left:2px solid transparent;transition:all 0.15s;user-select:none;}
+.nav-item:hover{color:var(--text1);background:rgba(255,255,255,0.04);}
+.nav-item.active{color:var(--blue2);background:rgba(56,139,253,0.08);border-left-color:var(--blue2);font-weight:500;}
+.nav-icon{width:16px;height:16px;opacity:0.7;flex-shrink:0;}.nav-item.active .nav-icon{opacity:1;}
+.nav-badge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;font-weight:600;border-radius:10px;padding:1px 6px;}
+.nav-badge-warn{background:var(--warn);}
+.sidebar-footer{margin-top:auto;padding:12px 16px;border-top:1px solid var(--border);}
+.user-info{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;}
+.user-avatar{width:26px;height:26px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.user-name{font-size:12px;font-weight:500;}.user-role{font-size:10px;color:var(--text3);}
+.logout-btn{width:100%;padding:6px;background:transparent;border:1px solid var(--border);border-radius:var(--radius);color:var(--text3);font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s;}
+.logout-btn:hover{border-color:var(--danger2);color:var(--danger2);}
+.ai-badge{display:flex;align-items:center;gap:8px;padding:8px 10px;background:linear-gradient(135deg,rgba(31,111,235,0.15),rgba(46,160,67,0.15));border:1px solid rgba(56,139,253,0.25);border-radius:var(--radius);margin-top:8px;}
+.ai-dot{width:7px;height:7px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}.ai-label{font-size:11px;color:var(--blue2);font-weight:500;}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{height:54px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;}
+.page-breadcrumb{font-size:12px;color:var(--text3);}.page-breadcrumb span{color:var(--text1);font-weight:500;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.status-pill{display:flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(46,160,67,0.12);border:1px solid rgba(46,160,67,0.25);border-radius:20px;font-size:11px;color:var(--accent);font-weight:500;}
+.status-dot{width:6px;height:6px;background:var(--accent);border-radius:50%;}.topbar-date{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;}
+.content{flex:1;overflow-y:auto;padding:20px;}.page{display:none;}.page.active{display:block;animation:fadeIn 0.2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+.ph{margin-bottom:20px;}.ph h1{font-size:20px;font-weight:600;}.ph p{font-size:13px;color:var(--text2);margin-top:2px;}
+.ph-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:16px;}.card-title{font-size:13px;font-weight:600;margin-bottom:12px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px;}
+.grid-12{display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-bottom:16px;}
+.grid-21{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px;}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:14px 16px;position:relative;overflow:hidden;transition:border-color 0.2s;}
+.stat:hover{border-color:var(--border2);}.stat-glow{position:absolute;top:-20px;right:-20px;width:60px;height:60px;border-radius:50%;opacity:0.08;}
+.stat-label{font-size:11px;color:var(--text3);font-weight:500;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;}
+.stat-val{font-size:26px;font-weight:700;line-height:1;}.stat-sub{font-size:11px;color:var(--text3);margin-top:5px;}
+.table-wrap{overflow-x:auto;}table{width:100%;border-collapse:collapse;}
+th{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.05em;padding:10px 12px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;}
+td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}tr:hover td{background:rgba(255,255,255,0.02);}td.bold{font-weight:600;color:var(--text1);}
+.low-row td{background:rgba(210,153,34,0.04);}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
+.pill-ok{background:rgba(46,160,67,0.15);color:#56d364;border:1px solid rgba(46,160,67,0.25);}
+.pill-warn{background:rgba(210,153,34,0.15);color:var(--gold);border:1px solid rgba(210,153,34,0.25);}
+.pill-danger{background:rgba(218,54,51,0.15);color:#f85149;border:1px solid rgba(218,54,51,0.25);}
+.pill-info{background:rgba(56,139,253,0.12);color:var(--blue2);border:1px solid rgba(56,139,253,0.2);}
+.pill-purple{background:rgba(188,140,255,0.1);color:#bc8cff;border:1px solid rgba(188,140,255,0.2);}
+.btn{padding:7px 14px;border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text1);font-family:inherit;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{background:var(--bg4);}.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff;}.btn-primary:hover{background:#1158b5;}
+.btn-success{background:var(--accent2);border-color:var(--accent2);color:#fff;}.btn-success:hover{background:#1a6e2e;}
+.btn-danger{background:rgba(218,54,51,0.15);border-color:rgba(218,54,51,0.3);color:var(--danger2);padding:4px 8px;font-size:11px;}.btn-danger:hover{background:rgba(218,54,51,0.25);}
+.btn-xs{padding:3px 8px;font-size:11px;}.btn-ghost{background:transparent;border-color:transparent;color:var(--text2);}.btn-ghost:hover{background:var(--bg3);color:var(--text1);border-color:var(--border);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}.form-grid .full{grid-column:1/-1;}
+.form-group label{display:block;font-size:11px;font-weight:500;color:var(--text2);margin-bottom:5px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:7px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text1);font-family:inherit;font-size:13px;outline:none;transition:border-color 0.15s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--blue2);}.form-group textarea{min-height:72px;resize:vertical;}
+.filter-row{display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap;}
+.search-box{position:relative;flex:1;min-width:160px;}
+.search-box input{padding:6px 10px 6px 30px;width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text1);font-family:inherit;font-size:12px;outline:none;}
+.search-box input:focus{border-color:var(--blue2);}.search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;}
+.filter-row select{padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);font-family:inherit;font-size:12px;outline:none;}
+.ai-card{background:linear-gradient(135deg,rgba(31,111,235,0.08) 0%,rgba(46,160,67,0.06) 100%);border:1px solid rgba(56,139,253,0.2);border-radius:var(--radius2);padding:16px;}
+.ai-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;}.ai-icon{font-size:16px;}
+.ai-title{font-size:13px;font-weight:600;color:var(--blue2);}.ai-desc{font-size:11px;color:var(--text3);}
+.ai-insights{display:flex;flex-direction:column;gap:8px;}
+.insight-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:var(--radius);border:1px solid var(--border);}
+.insight-icon{font-size:14px;flex-shrink:0;margin-top:1px;}.insight-text{font-size:12px;color:var(--text2);flex:1;}.insight-text strong{color:var(--text1);}
+.forecast-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.forecast-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px;}
+.forecast-mat{font-size:12px;font-weight:600;}.forecast-days{font-size:11px;color:var(--text3);margin-top:2px;}
+.forecast-badge{margin-top:8px;}.forecast-need{font-size:11px;color:var(--text2);margin-top:4px;}
+.timeline{display:flex;flex-direction:column;}
+.tl-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}.tl-item:last-child{border-bottom:none;}
+.tl-dot-wrap{display:flex;flex-direction:column;align-items:center;flex-shrink:0;padding-top:3px;}
+.tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}.tl-content{flex:1;}
+.tl-title{font-size:12px;font-weight:500;}.tl-meta{font-size:11px;color:var(--text3);margin-top:1px;}
+.alert-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius);margin-bottom:7px;font-size:12px;}
+.alert-warn{background:rgba(210,153,34,0.1);border:1px solid rgba(210,153,34,0.2);color:var(--gold);}
+.alert-danger{background:rgba(218,54,51,0.1);border:1px solid rgba(218,54,51,0.2);color:#f85149;}
+.alert-ok{background:rgba(46,160,67,0.1);border:1px solid rgba(46,160,67,0.2);color:#56d364;}
+.supplier-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;}
+.supplier-name{font-size:13px;font-weight:600;}.supplier-meta{font-size:11px;color:var(--text3);margin-top:2px;}
+.supplier-rating{display:flex;gap:2px;margin-top:6px;}.star{color:var(--gold);font-size:12px;}.star.empty{color:var(--border2);}
+.cost-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}.cost-row:last-child{border-bottom:none;}
+.cost-label{font-size:12px;color:var(--text2);flex:1;}.cost-bar-wrap{width:120px;}
+.cost-amount{font-size:12px;font-weight:600;font-family:'DM Mono',monospace;min-width:80px;text-align:right;}
+.prog{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-top:4px;}
+.prog-fill{height:100%;border-radius:3px;transition:width 0.5s;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius2);width:520px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--bg2);}
+.modal-head-title{font-size:14px;font-weight:600;}.modal-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:4px;}
+.modal-body{padding:20px;}.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+#toast{position:fixed;bottom:20px;right:20px;padding:10px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;z-index:2000;opacity:0;transform:translateY(8px);transition:all 0.25s;pointer-events:none;max-width:300px;}
+#toast.show{opacity:1;transform:none;}.chart-wrap{position:relative;}
+.mb12{margin-bottom:12px;}.mb16{margin-bottom:16px;}.mono{font-family:'DM Mono',monospace;}.flex-between{display:flex;align-items:center;justify-content:space-between;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="login-brand-icon">HRG</div>
+      <div><div class="login-brand-name">HRG Construction</div><div class="login-brand-sub">Smart Inventory Pro v2.0</div></div>
+    </div>
+    <div class="login-title">Sign In</div>
+    <div class="login-sub">Enter your credentials to access the system</div>
+    <div class="login-field"><label>Username</label><input type="text" id="login-username" placeholder="admin" autocomplete="username"></div>
+    <div class="login-field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-hint">Demo: <code>admin</code> / <code>admin123</code> &nbsp;|&nbsp; <code>staff</code> / <code>staff123</code></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="shell" id="app" style="display:none;">
+<div class="sidebar">
+  <div class="brand"><div class="brand-icon">HRG</div><div><div class="brand-name">HRG Construction</div><div class="brand-sub">Smart Inventory Pro</div></div></div>
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <div class="nav-item active" onclick="nav('dashboard')"><svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2V2zm0 7h5v5H2V9zm7-7h5v5H9V2zm0 7h5v5H9V9z"/></svg>Dashboard</div>
+    <div class="nav-item" onclick="nav('ai')"><svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zM6 8a2 2 0 114 0 2 2 0 01-4 0z"/></svg>AI Insights<span class="nav-badge nav-badge-warn" id="ai-badge-count">0</span></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Inventory</div>
+    <div class="nav-item" onclick="nav('inventory')"><svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v2H2V3zm0 4h12v2H2V7zm0 4h12v2H2v-2z"/></svg>All Materials</div>
+    <div class="nav-item" onclick="nav('add')"><svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 018 2z"/></svg>Add Material</div>
+    <div class="nav-item" onclick="nav('suppliers')"><svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 3a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1v7a1 1 0 01-1 1H3a1 1 0 01-1-1V6a1 1 0 01-1-1V3zm2 3v6h10V6H3z"/></svg>Suppliers</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Operations</div>
+    <div class="nav-item" onclick="nav('stockin')"><svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2l4 4H9v6H7V6H4l4-4z"/></svg>Stock In</div>
+    <div class="nav-item" onclick="nav('stockout')"><svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 14l-4-4h3V4h2v6h3l-4 4z"/></svg>Stock Out</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Analytics</div>
+    <div class="nav-item" onclick="nav('analytics')"><svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 12l3-4 3 2 3-5 3 3v4H2z"/></svg>Cost Analytics</div>
+    <div class="nav-item" onclick="nav('reports')"><svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M4 2h8a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1V3a1 1 0 011-1zm1 3v1h6V5H5zm0 3v1h6V8H5zm0 3v1h4v-1H5z"/></svg>Reports</div>
+    <div class="nav-item" onclick="nav('activity')"><svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zM7 4.75a.75.75 0 011.5 0v3.5l2.5 1.5a.75.75 0 01-.75 1.3l-3-1.8a.75.75 0 01-.25-.55V4.75z"/></svg>Activity Log</div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-info"><div class="user-avatar" id="user-avatar">?</div><div><div class="user-name" id="user-display">...</div><div class="user-role" id="user-role-display">...</div></div></div>
+    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    <div class="ai-badge"><div class="ai-dot"></div><div class="ai-label">Live Database</div></div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div><div class="page-breadcrumb">HRG Construction / <span id="breadcrumb-page">Dashboard</span></div></div>
+    <div class="topbar-right"><div class="status-pill"><div class="status-dot"></div>Connected</div><div class="topbar-date" id="topbar-date"></div></div>
+  </div>
+  <div class="content">
+
+    <div id="page-dashboard" class="page active">
+      <div class="ph ph-row"><div><h1>Dashboard</h1><p>Real-time overview of construction inventory</p></div><button class="btn btn-primary" onclick="nav('stockin')">+ Stock In</button></div>
+      <div class="grid-4" id="dash-stats"></div>
+      <div class="grid-21">
+        <div class="card"><div class="flex-between mb12"><div class="card-title">Stock Level Overview</div><select onchange="updateStockChart(this.value)" style="background:var(--bg);border:1px solid var(--border);color:var(--text2);font-size:11px;padding:3px 7px;border-radius:4px;font-family:inherit;"><option value="qty">By Quantity</option><option value="value">By Value</option></select></div><div class="chart-wrap" style="height:200px;"><canvas id="stockChart"></canvas></div></div>
+        <div class="card"><div class="card-title">Alerts</div><div id="dash-alerts"></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-title">Monthly Transactions</div><div class="chart-wrap" style="height:160px;"><canvas id="txnChart"></canvas></div></div>
+        <div class="card"><div class="card-title">Recent Activity</div><div id="dash-recent" class="timeline"></div></div>
+      </div>
+    </div>
+
+    <div id="page-ai" class="page">
+      <div class="ph"><h1>AI Insights</h1><p>Predictive analytics and smart recommendations</p></div>
+      <div class="grid-2 mb16">
+        <div class="ai-card"><div class="ai-header"><span class="ai-icon">🔮</span><div><div class="ai-title">Demand Forecast — Next 30 Days</div><div class="ai-desc">Based on historical consumption</div></div></div><div id="forecast-grid" class="forecast-grid"></div></div>
+        <div class="ai-card"><div class="ai-header"><span class="ai-icon">💡</span><div><div class="ai-title">Smart Recommendations</div><div class="ai-desc">Action items to optimize inventory</div></div></div><div id="ai-insights" class="ai-insights"></div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-title">Consumption Rate Analysis</div><div id="consumption-list"></div></div>
+        <div class="card"><div class="card-title">Reorder Timing Predictor</div><div id="reorder-list"></div></div>
+      </div>
+    </div>
+
+    <div id="page-inventory" class="page">
+      <div class="ph ph-row"><div><h1>All Materials</h1><p>Live stock levels from database</p></div><button class="btn btn-success" onclick="nav('add')">+ Add Material</button></div>
+      <div class="card">
+        <div class="filter-row">
+          <div class="search-box"><span class="search-icon">🔍</span><input type="text" placeholder="Search materials..." oninput="renderInventory()"></div>
+          <select onchange="renderInventory()" id="inv-filter-cat"><option value="">All Categories</option><option>Binding</option><option>Aggregate</option><option>Steel</option><option>Masonry</option><option>Electrical</option><option>Plumbing</option><option>Finishing</option><option>Other</option></select>
+          <select onchange="renderInventory()" id="inv-filter-status"><option value="">All Status</option><option value="ok">In Stock</option><option value="low">Low Stock</option><option value="out">Out of Stock</option></select>
+          <button class="btn btn-xs" onclick="exportCSV()">Export CSV</button>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Material</th><th>Category</th><th>Stock</th><th>Unit</th><th>Min Level</th><th>Rate</th><th>Value</th><th>Supplier</th><th>Status</th><th>Actions</th></tr></thead><tbody id="inv-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <div id="page-add" class="page">
+      <div class="ph"><h1>Add New Material</h1><p>Register a material in the database</p></div>
+      <div class="card" style="max-width:580px;">
+        <div id="add-msg"></div>
+        <div class="form-grid">
+          <div class="form-group full"><label>Material Name *</label><input id="m-name" placeholder="e.g. OPC 53 Grade Cement"></div>
+          <div class="form-group"><label>Category</label><select id="m-cat"><option>Binding</option><option>Aggregate</option><option>Steel</option><option>Masonry</option><option>Electrical</option><option>Plumbing</option><option>Finishing</option><option>Other</option></select></div>
+          <div class="form-group"><label>Unit</label><select id="m-unit"><option>Bags</option><option>MT</option><option>Cubic Meter</option><option>Pieces</option><option>Litres</option><option>Kg</option><option>Meters</option></select></div>
+          <div class="form-group"><label>Opening Stock</label><input type="number" id="m-qty" placeholder="0" min="0"></div>
+          <div class="form-group"><label>Min Level (reorder)</label><input type="number" id="m-min" placeholder="50" min="0"></div>
+          <div class="form-group"><label>Rate per Unit (Rs)</label><input type="number" id="m-rate" placeholder="0.00" min="0"></div>
+          <div class="form-group full"><label>Supplier Name</label><input id="m-supplier" placeholder="e.g. Tata Steel Ltd."></div>
+        </div>
+        <div style="margin-top:14px;"><button class="btn btn-success" onclick="addMaterial()">+ Add to Inventory</button></div>
+      </div>
+    </div>
+
+    <div id="page-suppliers" class="page">
+      <div class="ph ph-row"><div><h1>Suppliers</h1><p>Vendor directory from database</p></div><button class="btn btn-primary" onclick="openSupplierModal()">+ Add Supplier</button></div>
+      <div class="grid-3" id="supplier-grid"></div>
+    </div>
+
+    <div id="page-stockin" class="page">
+      <div class="ph"><h1>Stock In</h1><p>Record incoming materials</p></div>
+      <div class="grid-12">
+        <div class="card" style="max-width:520px;">
+          <div id="si-msg"></div>
+          <div class="form-grid">
+            <div class="form-group full"><label>Select Material *</label><select id="si-mat"></select></div>
+            <div class="form-group"><label>Quantity Received *</label><input type="number" id="si-qty" placeholder="0" min="1"></div>
+            <div class="form-group"><label>Date</label><input type="date" id="si-date"></div>
+            <div class="form-group"><label>Supplier</label><input id="si-supplier" placeholder="Supplier name"></div>
+            <div class="form-group"><label>Invoice No.</label><input id="si-invoice" placeholder="INV-XXXX"></div>
+            <div class="form-group full"><label>Remarks</label><textarea id="si-remarks" style="min-height:60px;"></textarea></div>
+          </div>
+          <div style="margin-top:14px;"><button class="btn btn-success" onclick="doStockIn()">Confirm Stock In</button></div>
+        </div>
+        <div class="card"><div class="card-title">Recent Stock-In</div><div id="recent-si"></div></div>
+      </div>
+    </div>
+
+    <div id="page-stockout" class="page">
+      <div class="ph"><h1>Stock Out</h1><p>Issue materials to site / project</p></div>
+      <div class="grid-12">
+        <div class="card" style="max-width:520px;">
+          <div id="so-msg"></div>
+          <div class="form-grid">
+            <div class="form-group full"><label>Select Material *</label><select id="so-mat"></select></div>
+            <div class="form-group"><label>Quantity *</label><input type="number" id="so-qty" placeholder="0" min="1"></div>
+            <div class="form-group"><label>Date</label><input type="date" id="so-date"></div>
+            <div class="form-group"><label>Issued To</label><input id="so-to" placeholder="Site A – Block 2"></div>
+            <div class="form-group"><label>Authorized By</label><input id="so-auth" placeholder="Supervisor name"></div>
+            <div class="form-group"><label>Project Code</label><input id="so-project" placeholder="PRJ-2024-03"></div>
+            <div class="form-group full"><label>Remarks</label><textarea id="so-remarks" style="min-height:60px;"></textarea></div>
+          </div>
+          <div style="margin-top:14px;"><button class="btn btn-primary" onclick="doStockOut()">Confirm Issue</button></div>
+        </div>
+        <div class="card"><div class="card-title">Recent Issues</div><div id="recent-so"></div></div>
+      </div>
+    </div>
+
+    <div id="page-analytics" class="page">
+      <div class="ph"><h1>Cost Analytics</h1><p>Financial breakdown from live data</p></div>
+      <div class="grid-4" id="analytics-stats"></div>
+      <div class="grid-2">
+        <div class="card"><div class="card-title">Inventory Value by Category</div><div class="chart-wrap" style="height:220px;"><canvas id="catChart"></canvas></div></div>
+        <div class="card"><div class="card-title">Monthly Spend Trend</div><div class="chart-wrap" style="height:220px;"><canvas id="spendChart"></canvas></div></div>
+      </div>
+      <div class="card"><div class="card-title">Top Materials by Value</div><div id="top-value-list"></div></div>
+    </div>
+
+    <div id="page-reports" class="page">
+      <div class="ph ph-row"><div><h1>Reports</h1><p>Stock summary from database</p></div><button class="btn" onclick="exportCSV()">Export CSV</button></div>
+      <div class="card mb16">
+        <div class="card-title">Material-wise Stock Summary</div>
+        <div class="table-wrap"><table><thead><tr><th>Material</th><th>Category</th><th>Stock</th><th>Min Level</th><th>Rate</th><th>Value</th><th>Status</th></tr></thead><tbody id="rep-tbody"></tbody></table></div>
+        <div id="rep-total" style="text-align:right;margin-top:10px;font-size:12px;font-weight:600;"></div>
+      </div>
+      <div class="grid-2">
+        <div class="card"><div class="card-title">Stock-In This Month</div><div id="rep-si"></div></div>
+        <div class="card"><div class="card-title">Stock-Out This Month</div><div id="rep-so"></div></div>
+      </div>
+    </div>
+
+    <div id="page-activity" class="page">
+      <div class="ph ph-row"><div><h1>Activity Log</h1><p>Full transaction history from database</p></div><select id="act-filter" onchange="renderActivity()" style="padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);font-family:inherit;font-size:12px;outline:none;"><option value="">All Types</option><option value="Stock In">Stock In</option><option value="Stock Out">Stock Out</option></select></div>
+      <div class="card" style="padding:0;overflow:hidden;"><div class="table-wrap"><table><thead><tr><th>#</th><th>Date</th><th>Type</th><th>Material</th><th>Qty</th><th>Details</th><th>Project</th></tr></thead><tbody id="act-tbody"></tbody></table></div></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-head-title" id="modal-title">Edit</div><button class="modal-close" onclick="closeModal()">x</button></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="modal-save-btn">Save Changes</button></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+const API={
+  async req(method,path,body){
+    const opts={method,credentials:'include',headers:{'Content-Type':'application/json'}};
+    if(body)opts.body=JSON.stringify(body);
+    const r=await fetch('/api'+path,opts);
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.error||'Request failed');
+    return data;
+  },
+  get:(p)=>API.req('GET',p),
+  post:(p,b)=>API.req('POST',p,b),
+  put:(p,b)=>API.req('PUT',p,b),
+  delete:(p)=>API.req('DELETE',p),
+};
+
+let materials=[],transactions=[],suppliers=[];
+let stockChart=null,txnChart=null,catChart=null,spendChart=null;
+let editId=null,editType=null;
+const today=new Date().toISOString().split('T')[0];
+document.getElementById('topbar-date').textContent=new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+
+async function checkAuth(){
+  try{const{user}=await API.get('/auth/me');onLoggedIn(user);}catch{}
+}
+async function doLogin(){
+  const username=document.getElementById('login-username').value.trim();
+  const password=document.getElementById('login-password').value;
+  const errEl=document.getElementById('login-error');errEl.textContent='';
+  try{const{user}=await API.post('/auth/login',{username,password});onLoggedIn(user);}
+  catch(e){errEl.textContent=e.message;}
+}
+document.getElementById('login-password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('login-username').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('login-password').focus();});
+async function doLogout(){await API.post('/auth/logout');location.reload();}
+function onLoggedIn(user){
+  document.getElementById('login-page').classList.add('hidden');
+  document.getElementById('app').style.display='flex';
+  document.getElementById('user-display').textContent=user.username;
+  document.getElementById('user-role-display').textContent=user.role;
+  document.getElementById('user-avatar').textContent=user.username[0].toUpperCase();
+  loadAll();
+}
+async function loadAll(){
+  [materials,transactions,suppliers]=await Promise.all([API.get('/materials'),API.get('/transactions'),API.get('/suppliers')]);
+  renderDashboard();
+}
+
+function nav(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')?.includes("'"+page+"'"))n.classList.add('active');});
+  const names={dashboard:'Dashboard',ai:'AI Insights',inventory:'All Materials',add:'Add Material',suppliers:'Suppliers',stockin:'Stock In',stockout:'Stock Out',analytics:'Cost Analytics',reports:'Reports',activity:'Activity Log'};
+  document.getElementById('breadcrumb-page').textContent=names[page]||page;
+  const renders={dashboard:renderDashboard,ai:renderAI,inventory:renderInventory,suppliers:renderSuppliers,analytics:renderAnalytics,reports:renderReports,activity:renderActivity};
+  if(renders[page])renders[page]();
+  if(page==='stockin'){populateSel('si-mat');document.getElementById('si-date').value=today;}
+  if(page==='stockout'){populateSel('so-mat');document.getElementById('so-date').value=today;}
+}
+
+function getStatus(m){
+  if(m.qty===0)return{label:'Out of Stock',cls:'pill-danger'};
+  if(m.qty<m.min_qty)return{label:'Low Stock',cls:'pill-warn'};
+  return{label:'In Stock',cls:'pill-ok'};
+}
+function fmt(n){return(n||0).toLocaleString('en-IN');}
+function fmtL(n){return n>=100000?'Rs'+(n/100000).toFixed(2)+'L':'Rs'+fmt(n);}
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');t.textContent=msg;
+  t.style.background=type==='ok'?'#238636':type==='warn'?'#9a6700':'#b62324';
+  t.style.color='#fff';t.style.border='1px solid '+(type==='ok'?'#3fb950':type==='warn'?'#d29922':'#f85149');
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);
+}
+function msgEl(id,html,cls='ok'){
+  const el=document.getElementById(id);
+  const colors={ok:'var(--accent)',warn:'var(--warn)',danger:'var(--danger2)'};
+  const bgs={ok:'rgba(46,160,67,0.1)',warn:'rgba(210,153,34,0.1)',danger:'rgba(218,54,51,0.1)'};
+  el.innerHTML=`<div style="padding:9px 12px;margin-bottom:12px;border-radius:6px;font-size:12px;border:1px solid ${colors[cls]};background:${bgs[cls]};color:${colors[cls]};">${html}</div>`;
+  setTimeout(()=>el.innerHTML='',3500);
+}
+function populateSel(id){document.getElementById(id).innerHTML=materials.map(m=>`<option value="${m.id}">${m.name} (${fmt(m.qty)} ${m.unit})</option>`).join('');}
+
+function renderDashboard(){
+  const total=materials.length,low=materials.filter(m=>m.qty>0&&m.qty<m.min_qty).length,out=materials.filter(m=>m.qty===0).length;
+  const value=materials.reduce((s,m)=>s+m.qty*m.rate,0);
+  const thisMonth=new Date().toISOString().slice(0,7);
+  const monthTxns=transactions.filter(t=>t.date.startsWith(thisMonth));
+  const siQty=monthTxns.filter(t=>t.type==='Stock In').reduce((s,t)=>s+t.qty,0);
+  const soQty=monthTxns.filter(t=>t.type==='Stock Out').reduce((s,t)=>s+t.qty,0);
+  document.getElementById('dash-stats').innerHTML=`
+    <div class="stat"><div class="stat-glow" style="background:#388bfd;"></div><div class="stat-label">Total Materials</div><div class="stat-val">${total}</div><div class="stat-sub">registered types</div></div>
+    <div class="stat"><div class="stat-glow" style="background:#2ea043;"></div><div class="stat-label">Total Stock Value</div><div class="stat-val">${fmtL(value)}</div><div class="stat-sub">estimated</div></div>
+    <div class="stat"><div class="stat-glow" style="background:#d29922;"></div><div class="stat-label">Low / Out of Stock</div><div class="stat-val" style="color:${low+out>0?'var(--warn)':'var(--accent)'}">${low+out}</div><div class="stat-sub">${low} low - ${out} out</div></div>
+    <div class="stat"><div class="stat-glow" style="background:#bc8cff;"></div><div class="stat-label">This Month</div><div class="stat-val">${monthTxns.length}</div><div class="stat-sub">+${siQty} in / -${soQty} out</div></div>`;
+  const alerts=materials.filter(m=>m.qty<m.min_qty);
+  document.getElementById('dash-alerts').innerHTML=!alerts.length?'<div class="alert-item alert-ok">All materials at sufficient levels</div>':alerts.slice(0,5).map(m=>`<div class="alert-item ${m.qty===0?'alert-danger':'alert-warn'}"><span>${m.qty===0?'X':'!'}</span><div><strong>${m.name}</strong> - ${m.qty} ${m.unit} (min: ${m.min_qty})</div></div>`).join('');
+  document.getElementById('ai-badge-count').textContent=alerts.length;
+  document.getElementById('dash-recent').innerHTML=[...transactions].slice(0,6).map(t=>`<div class="tl-item"><div class="tl-dot-wrap"><div class="tl-dot" style="background:${t.type==='Stock In'?'var(--accent)':'var(--danger2)'}"></div></div><div class="tl-content"><div class="tl-title">${t.mat_name||'?'} <span class="pill ${t.type==='Stock In'?'pill-ok':'pill-danger'}" style="margin-left:4px;font-size:10px;">${t.type==='Stock In'?'+':'-'}${t.qty}</span></div><div class="tl-meta">${t.date} - ${t.details}</div></div></div>`).join('');
+  renderStockChart();renderTxnChart();
+}
+
+function renderStockChart(mode='qty'){
+  const top=[...materials].sort((a,b)=>mode==='value'?b.qty*b.rate-a.qty*a.rate:b.qty-a.qty).slice(0,8);
+  const ctx=document.getElementById('stockChart');
+  if(stockChart)stockChart.destroy();
+  stockChart=new Chart(ctx,{type:'bar',data:{labels:top.map(m=>m.name.length>18?m.name.slice(0,18)+'...':m.name),datasets:[{data:top.map(m=>mode==='value'?m.qty*m.rate:m.qty),backgroundColor:top.map(m=>m.qty<m.min_qty?'rgba(210,153,34,0.7)':'rgba(56,139,253,0.7)'),borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#5a6270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#5a6270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+}
+function updateStockChart(val){renderStockChart(val);}
+
+function renderTxnChart(){
+  const months=[],prefixes=[];
+  for(let i=5;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);prefixes.push(d.toISOString().slice(0,7));months.push(d.toLocaleString('en',{month:'short'}));}
+  const si=prefixes.map(p=>transactions.filter(t=>t.date.startsWith(p)&&t.type==='Stock In').length);
+  const so=prefixes.map(p=>transactions.filter(t=>t.date.startsWith(p)&&t.type==='Stock Out').length);
+  const ctx=document.getElementById('txnChart');if(txnChart)txnChart.destroy();
+  txnChart=new Chart(ctx,{type:'line',data:{labels:months,datasets:[{label:'Stock In',data:si,borderColor:'#2ea043',backgroundColor:'rgba(46,160,67,0.1)',tension:0.4,fill:true,pointRadius:3},{label:'Stock Out',data:so,borderColor:'#388bfd',backgroundColor:'rgba(56,139,253,0.08)',tension:0.4,fill:true,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8d96a0',font:{size:11}}}},scales:{x:{ticks:{color:'#5a6270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#5a6270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+}
+
+function renderAI(){
+  const consumption={};transactions.filter(t=>t.type==='Stock Out').forEach(t=>{consumption[t.mat_id]=(consumption[t.mat_id]||0)+t.qty;});
+  const forecasts=materials.map(m=>{const consumed=consumption[m.id]||0;const dr=consumed/120;const f30=Math.round(dr*30);const dl=dr>0?Math.round(m.qty/dr):999;return{...m,dailyRate:dr,forecast30:f30,daysLeft:dl};}).sort((a,b)=>a.daysLeft-b.daysLeft);
+  document.getElementById('forecast-grid').innerHTML=forecasts.slice(0,6).map(f=>{const u=f.daysLeft<14?'pill-danger':f.daysLeft<30?'pill-warn':'pill-ok';const d=f.daysLeft>=999?'inf days':f.daysLeft+' days';return`<div class="forecast-item"><div class="forecast-mat">${f.name.length>20?f.name.slice(0,20)+'...':f.name}</div><div class="forecast-days">Lasts: <strong>${d}</strong></div><div class="forecast-badge"><span class="pill ${u}">${f.daysLeft<14?'Urgent':f.daysLeft<30?'Soon':'OK'}</span></div>${f.forecast30>0?`<div class="forecast-need">~${f.forecast30} ${f.unit}/mo</div>`:''}</div>`;}).join('');
+  const ins=[];
+  forecasts.filter(f=>f.daysLeft<14&&f.daysLeft<999).forEach(f=>ins.push({icon:'X',text:`<strong>${f.name}</strong> runs out in ~${f.daysLeft} days. Reorder: <strong>${Math.max(f.min_qty*2,f.forecast30*2)} ${f.unit}</strong>`}));
+  forecasts.filter(f=>f.daysLeft>=14&&f.daysLeft<30).forEach(f=>ins.push({icon:'!',text:`<strong>${f.name}</strong> getting low (~${f.daysLeft} days). Plan reorder.`}));
+  materials.filter(m=>m.qty===0).forEach(m=>ins.push({icon:'X',text:`<strong>${m.name}</strong> is out of stock. Immediate procurement needed!`}));
+  const hv=[...materials].sort((a,b)=>b.qty*b.rate-a.qty*a.rate)[0];
+  if(hv)ins.push({icon:'$',text:`<strong>${hv.name}</strong> has highest locked capital (${fmtL(hv.qty*hv.rate)}). Consider JIT ordering.`});
+  document.getElementById('ai-insights').innerHTML=ins.slice(0,5).map(i=>`<div class="insight-item"><span class="insight-icon">${i.icon}</span><div class="insight-text">${i.text}</div></div>`).join('')||'<div style="color:var(--text3);">All materials well stocked!</div>';
+  document.getElementById('consumption-list').innerHTML=forecasts.slice(0,8).map(f=>{const rate=f.dailyRate>0?f.dailyRate.toFixed(2)+' '+f.unit+'/day':'No usage';const pct=Math.min(100,(f.qty/(f.min_qty*4))*100);return`<div style="padding:8px 0;border-bottom:1px solid var(--border);"><div class="flex-between" style="margin-bottom:4px;"><span style="font-size:12px;font-weight:500;">${f.name}</span><span style="font-size:11px;color:var(--text3);">${rate}</span></div><div class="prog"><div class="prog-fill" style="width:${pct}%;background:${pct<30?'var(--danger2)':pct<60?'var(--warn)':'var(--accent)'};"></div></div></div>`;}).join('');
+  document.getElementById('reorder-list').innerHTML=forecasts.filter(f=>f.daysLeft<999).slice(0,7).map(f=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);"><div class="flex-between"><span style="font-size:12px;font-weight:500;">${f.name}</span><span class="pill ${f.daysLeft<14?'pill-danger':'pill-warn'}">${f.daysLeft<14?'Order NOW':'Order in '+Math.max(0,f.daysLeft-14)+'d'}</span></div><div style="font-size:11px;color:var(--text3);margin-top:3px;">Current: ${f.qty} ${f.unit}</div></div>`).join('');
+}
+
+function renderInventory(){
+  const q=(document.querySelector('.search-box input')||{value:''}).value.toLowerCase();
+  const cat=document.getElementById('inv-filter-cat')?.value||'';
+  const status=document.getElementById('inv-filter-status')?.value||'';
+  const filtered=materials.filter(m=>{
+    const mQ=m.name.toLowerCase().includes(q),mC=!cat||m.category===cat,st=getStatus(m);
+    const mS=!status||(status==='ok'&&st.label==='In Stock')||(status==='low'&&st.label==='Low Stock')||(status==='out'&&st.label==='Out of Stock');
+    return mQ&&mC&&mS;
+  });
+  document.getElementById('inv-tbody').innerHTML=filtered.map(m=>{const st=getStatus(m);return`<tr class="${m.qty<m.min_qty?'low-row':''}"><td class="bold">${m.name}</td><td><span class="pill pill-info">${m.category}</span></td><td class="bold mono">${fmt(m.qty)}</td><td style="color:var(--text3);">${m.unit}</td><td class="mono">${fmt(m.min_qty)}</td><td class="mono">Rs${fmt(m.rate)}</td><td class="mono" style="color:var(--gold);">${fmtL(m.qty*m.rate)}</td><td style="color:var(--text3);">${m.supplier||'-'}</td><td><span class="pill ${st.cls}">${st.label}</span></td><td><button class="btn btn-xs" onclick="openEdit(${m.id})">Edit</button> <button class="btn btn-danger btn-xs" onclick="delMaterial(${m.id})">Del</button></td></tr>`;}).join('')||'<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--text3);">No materials found</td></tr>';
+}
+
+async function addMaterial(){
+  const name=document.getElementById('m-name').value.trim();
+  if(!name){toast('Please enter material name','danger');return;}
+  try{
+    const m=await API.post('/materials',{name,category:document.getElementById('m-cat').value,unit:document.getElementById('m-unit').value,qty:parseFloat(document.getElementById('m-qty').value)||0,min_qty:parseFloat(document.getElementById('m-min').value)||50,rate:parseFloat(document.getElementById('m-rate').value)||0,supplier:document.getElementById('m-supplier').value.trim()});
+    materials.push(m);
+    ['m-name','m-qty','m-min','m-rate','m-supplier'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    msgEl('add-msg','Material added successfully!','ok');toast('Material added!');
+  }catch(e){toast(e.message,'danger');}
+}
+
+function renderSuppliers(){
+  document.getElementById('supplier-grid').innerHTML=suppliers.map(s=>`<div class="supplier-card"><div class="flex-between"><div class="supplier-name">${s.name}</div><span class="pill pill-info" style="font-size:10px;">${s.category}</span></div><div class="supplier-meta">${s.phone} - ${s.contact}</div><div class="supplier-meta">Lead time: ${s.lead_days} days</div><div class="supplier-rating">${[...Array(5)].map((_,i)=>`<span class="star ${i<s.rating?'':'empty'}">*</span>`).join('')}</div>${s.notes?`<div style="font-size:11px;color:var(--text3);margin-top:6px;">${s.notes}</div>`:''}<div style="margin-top:10px;display:flex;gap:6px;"><button class="btn btn-xs" onclick="editSupplier(${s.id})">Edit</button><button class="btn btn-danger btn-xs" onclick="delSupplier(${s.id})">Remove</button></div></div>`).join('');
+}
+
+function supplierFormHTML(s={}){return`<div class="form-grid"><div class="form-group full"><label>Supplier Name *</label><input id="sf-name" value="${s.name||''}"></div><div class="form-group"><label>Contact Person</label><input id="sf-contact" value="${s.contact||''}"></div><div class="form-group"><label>Phone</label><input id="sf-phone" value="${s.phone||''}"></div><div class="form-group"><label>Category</label><select id="sf-cat">${['Binding','Aggregate','Steel','Masonry','Electrical','Plumbing','Other'].map(c=>`<option ${c===(s.category||'')?'selected':''}>${c}</option>`).join('')}</select></div><div class="form-group"><label>Rating (1-5)</label><input type="number" id="sf-rating" value="${s.rating||3}" min="1" max="5"></div><div class="form-group"><label>Lead Days</label><input type="number" id="sf-lead" value="${s.lead_days||5}" min="1"></div><div class="form-group full"><label>Notes</label><textarea id="sf-notes">${s.notes||''}</textarea></div></div>`;}
+
+function openSupplierModal(){editType='new-supplier';editId=null;document.getElementById('modal-title').textContent='Add New Supplier';document.getElementById('modal-body').innerHTML=supplierFormHTML({});document.getElementById('modal-save-btn').onclick=saveSupplier;document.getElementById('modal-overlay').classList.add('open');}
+function editSupplier(id){editType='edit-supplier';editId=id;const s=suppliers.find(x=>x.id===id);document.getElementById('modal-title').textContent='Edit: '+s.name;document.getElementById('modal-body').innerHTML=supplierFormHTML(s);document.getElementById('modal-save-btn').onclick=saveSupplier;document.getElementById('modal-overlay').classList.add('open');}
+async function saveSupplier(){
+  const body={name:document.getElementById('sf-name').value,contact:document.getElementById('sf-contact').value,phone:document.getElementById('sf-phone').value,category:document.getElementById('sf-cat').value,rating:parseInt(document.getElementById('sf-rating').value),lead_days:parseInt(document.getElementById('sf-lead').value),notes:document.getElementById('sf-notes').value};
+  try{if(editType==='new-supplier'){const s=await API.post('/suppliers',body);suppliers.push(s);}else{const s=await API.put('/suppliers/'+editId,body);const i=suppliers.findIndex(x=>x.id===editId);suppliers[i]=s;}closeModal();renderSuppliers();toast('Supplier saved!');}catch(e){toast(e.message,'danger');}
+}
+async function delSupplier(id){if(!confirm('Remove this supplier?'))return;try{await API.delete('/suppliers/'+id);suppliers=suppliers.filter(x=>x.id!==id);renderSuppliers();toast('Removed.');}catch(e){toast(e.message,'danger');}}
+
+async function doStockIn(){
+  const mat_id=document.getElementById('si-mat').value,qty=parseFloat(document.getElementById('si-qty').value);
+  if(!mat_id||!qty){toast('Material and quantity required','danger');return;}
+  const invoice=document.getElementById('si-invoice').value.trim(),supplier=document.getElementById('si-supplier').value.trim(),remarks=document.getElementById('si-remarks').value.trim();
+  const details=[invoice,supplier,remarks].filter(Boolean).join(' | ')||'Stock In';
+  try{
+    const res=await API.post('/transactions',{type:'Stock In',mat_id,qty,details,date:document.getElementById('si-date').value});
+    const idx=materials.findIndex(m=>m.id==mat_id);if(idx>=0)materials[idx].qty=res.new_qty;
+    transactions.unshift(res.transaction);populateSel('si-mat');
+    document.getElementById('si-qty').value='';document.getElementById('si-invoice').value='';document.getElementById('si-supplier').value='';document.getElementById('si-remarks').value='';
+    msgEl('si-msg','Stock In confirmed! New qty: '+res.new_qty,'ok');toast('Stock In recorded!');renderRecentSide('si');
+  }catch(e){toast(e.message,'danger');}
+}
+
+async function doStockOut(){
+  const mat_id=document.getElementById('so-mat').value,qty=parseFloat(document.getElementById('so-qty').value);
+  if(!mat_id||!qty){toast('Material and quantity required','danger');return;}
+  const to=document.getElementById('so-to').value.trim(),auth=document.getElementById('so-auth').value.trim(),project=document.getElementById('so-project').value.trim(),remarks=document.getElementById('so-remarks').value.trim();
+  const details=[to,auth,remarks].filter(Boolean).join(' | ')||'Stock Out';
+  try{
+    const res=await API.post('/transactions',{type:'Stock Out',mat_id,qty,details,project,date:document.getElementById('so-date').value});
+    const idx=materials.findIndex(m=>m.id==mat_id);if(idx>=0)materials[idx].qty=res.new_qty;
+    transactions.unshift(res.transaction);populateSel('so-mat');
+    document.getElementById('so-qty').value='';document.getElementById('so-to').value='';document.getElementById('so-auth').value='';document.getElementById('so-project').value='';document.getElementById('so-remarks').value='';
+    msgEl('so-msg','Issued! Remaining: '+res.new_qty,'ok');toast('Stock Out recorded!');renderRecentSide('so');
+  }catch(e){toast(e.message,'danger');}
+}
+
+function renderRecentSide(which){
+  const type=which==='si'?'Stock In':'Stock Out',id=which==='si'?'recent-si':'recent-so';
+  const recent=transactions.filter(t=>t.type===type).slice(0,6);
+  document.getElementById(id).innerHTML=recent.map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;"><div class="flex-between"><span style="font-weight:500;">${t.mat_name||'?'}</span><span style="color:${which==='si'?'var(--accent)':'var(--danger2)'};">${which==='si'?'+':'-'}${t.qty}</span></div><div style="font-size:11px;color:var(--text3);margin-top:2px;">${t.date} - ${t.details}</div></div>`).join('')||'<div style="color:var(--text3);font-size:12px;padding:8px 0;">No records yet</div>';
+}
+
+function renderAnalytics(){
+  const totalVal=materials.reduce((s,m)=>s+m.qty*m.rate,0),low=materials.filter(m=>m.qty<m.min_qty).length,avgVal=materials.length?totalVal/materials.length:0;
+  document.getElementById('analytics-stats').innerHTML=`<div class="stat"><div class="stat-glow" style="background:#e3b341;"></div><div class="stat-label">Total Value</div><div class="stat-val" style="color:var(--gold);">${fmtL(totalVal)}</div><div class="stat-sub">all materials</div></div><div class="stat"><div class="stat-glow" style="background:#388bfd;"></div><div class="stat-label">Materials</div><div class="stat-val">${materials.length}</div><div class="stat-sub">${low} need reorder</div></div><div class="stat"><div class="stat-glow" style="background:#2ea043;"></div><div class="stat-label">Transactions</div><div class="stat-val">${transactions.length}</div><div class="stat-sub">total recorded</div></div><div class="stat"><div class="stat-glow" style="background:#bc8cff;"></div><div class="stat-label">Avg Item Value</div><div class="stat-val">${fmtL(avgVal)}</div><div class="stat-sub">per type</div></div>`;
+  const catMap={};materials.forEach(m=>{catMap[m.category]=(catMap[m.category]||0)+m.qty*m.rate;});
+  const cats=Object.keys(catMap);const catCtx=document.getElementById('catChart');if(catChart)catChart.destroy();
+  catChart=new Chart(catCtx,{type:'doughnut',data:{labels:cats,datasets:[{data:cats.map(c=>catMap[c]),backgroundColor:['rgba(56,139,253,0.7)','rgba(46,160,67,0.7)','rgba(227,179,65,0.7)','rgba(248,81,73,0.7)','rgba(188,140,255,0.7)','rgba(56,211,253,0.7)','rgba(210,153,34,0.7)'],borderColor:'#161b22',borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8d96a0',font:{size:11}}}}}});
+  const months=[],prefixes=[];for(let i=5;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);prefixes.push(d.toISOString().slice(0,7));months.push(d.toLocaleString('en',{month:'short'}));}
+  const spendData=prefixes.map(p=>{const outs=transactions.filter(t=>t.date.startsWith(p)&&t.type==='Stock Out');return outs.reduce((s,t)=>{const m=materials.find(x=>x.id===t.mat_id);return s+(m?t.qty*m.rate:0);},0);});
+  const spCtx=document.getElementById('spendChart');if(spendChart)spendChart.destroy();
+  spendChart=new Chart(spCtx,{type:'bar',data:{labels:months,datasets:[{label:'Material Cost',data:spendData,backgroundColor:'rgba(227,179,65,0.5)',borderColor:'#e3b341',borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8d96a0',font:{size:11}}}},scales:{x:{ticks:{color:'#5a6270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#5a6270',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+  const sorted=[...materials].sort((a,b)=>b.qty*b.rate-a.qty*a.rate);const maxV=sorted[0]?.qty*sorted[0]?.rate||1;
+  document.getElementById('top-value-list').innerHTML=sorted.slice(0,8).map((m,i)=>{const val=m.qty*m.rate,pct=(val/maxV)*100;return`<div class="cost-row"><div style="color:var(--text3);font-size:11px;width:20px;">#${i+1}</div><div class="cost-label"><strong>${m.name}</strong><br><span style="font-size:10px;">${m.category}</span></div><div class="cost-bar-wrap"><div class="prog"><div class="prog-fill" style="width:${pct}%;background:var(--blue2);"></div></div></div><div class="cost-amount">${fmtL(val)}</div></div>`;}).join('');
+}
+
+function renderReports(){
+  let total=0;
+  document.getElementById('rep-tbody').innerHTML=materials.map(m=>{const val=m.qty*m.rate;total+=val;const st=getStatus(m);return`<tr><td class="bold">${m.name}</td><td>${m.category}</td><td class="mono">${fmt(m.qty)} ${m.unit}</td><td class="mono">${fmt(m.min_qty)}</td><td class="mono">Rs${fmt(m.rate)}</td><td class="mono">Rs${fmt(val)}</td><td><span class="pill ${st.cls}">${st.label}</span></td></tr>`;}).join('');
+  document.getElementById('rep-total').textContent='Total Inventory Value: Rs'+fmt(total);
+  const tm=new Date().toISOString().slice(0,7);
+  const ins=transactions.filter(t=>t.type==='Stock In'&&t.date.startsWith(tm));
+  const outs=transactions.filter(t=>t.type==='Stock Out'&&t.date.startsWith(tm));
+  const mkList=arr=>arr.length?arr.map(t=>`<div style="padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;"><span style="font-weight:500;">${t.mat_name||'?'}</span><span style="color:var(--text3);"> - ${t.qty} ${t.mat_unit||''}</span><span style="color:var(--text3);float:right;">${t.date}</span></div>`).join(''):'<div style="color:var(--text3);font-size:12px;padding:8px 0;">None this month</div>';
+  document.getElementById('rep-si').innerHTML=mkList(ins);document.getElementById('rep-so').innerHTML=mkList(outs);
+}
+
+function renderActivity(){
+  const filter=document.getElementById('act-filter')?.value||'';
+  const filtered=transactions.filter(t=>!filter||t.type===filter);
+  document.getElementById('act-tbody').innerHTML=filtered.map((t,i)=>`<tr><td class="mono" style="color:var(--text3);">${filtered.length-i}</td><td class="mono">${t.date}</td><td><span class="pill ${t.type==='Stock In'?'pill-ok':'pill-info'}">${t.type}</span></td><td class="bold">${t.mat_name||'Unknown'}</td><td class="mono" style="color:${t.type==='Stock In'?'var(--accent)':'var(--blue2)'};">${t.type==='Stock In'?'+':'-'}${t.qty}</td><td style="color:var(--text3);">${t.details}</td><td>${t.project?`<span class="pill pill-purple">${t.project}</span>`:'<span style="color:var(--text3);">-</span>'}</td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text3);">No transactions found</td></tr>';
+}
+
+function openEdit(id){
+  editId=id;editType='material';const m=materials.find(x=>x.id===id);if(!m)return;
+  document.getElementById('modal-title').textContent='Edit: '+m.name;
+  document.getElementById('modal-body').innerHTML=`<div class="form-grid"><div class="form-group full"><label>Material Name</label><input id="e-name" value="${m.name}"></div><div class="form-group"><label>Category</label><select id="e-cat">${['Binding','Aggregate','Steel','Masonry','Electrical','Plumbing','Finishing','Other'].map(c=>`<option ${c===m.category?'selected':''}>${c}</option>`).join('')}</select></div><div class="form-group"><label>Unit</label><select id="e-unit">${['Bags','MT','Cubic Meter','Pieces','Litres','Kg','Meters'].map(u=>`<option ${u===m.unit?'selected':''}>${u}</option>`).join('')}</select></div><div class="form-group"><label>Current Qty</label><input type="number" id="e-qty" value="${m.qty}"></div><div class="form-group"><label>Min Level</label><input type="number" id="e-min" value="${m.min_qty}"></div><div class="form-group"><label>Rate (Rs)</label><input type="number" id="e-rate" value="${m.rate}"></div><div class="form-group full"><label>Supplier</label><input id="e-supplier" value="${m.supplier||''}"></div></div>`;
+  document.getElementById('modal-save-btn').onclick=saveEdit;document.getElementById('modal-overlay').classList.add('open');
+}
+async function saveEdit(){
+  try{const updated=await API.put('/materials/'+editId,{name:document.getElementById('e-name').value,category:document.getElementById('e-cat').value,unit:document.getElementById('e-unit').value,qty:parseFloat(document.getElementById('e-qty').value)||0,min_qty:parseFloat(document.getElementById('e-min').value)||0,rate:parseFloat(document.getElementById('e-rate').value)||0,supplier:document.getElementById('e-supplier').value});const idx=materials.findIndex(x=>x.id===editId);materials[idx]=updated;closeModal();renderInventory();toast('Material updated!');}catch(e){toast(e.message,'danger');}
+}
+async function delMaterial(id){
+  if(!confirm('Remove this material?'))return;
+  try{await API.delete('/materials/'+id);materials=materials.filter(x=>x.id!==id);transactions=transactions.filter(t=>t.mat_id!==id);renderInventory();toast('Material removed.');}catch(e){toast(e.message,'danger');}
+}
+
+function exportCSV(){
+  const headers=['Name','Category','Qty','Unit','Min Level','Rate','Value','Status','Supplier'];
+  const rows=materials.map(m=>[m.name,m.category,m.qty,m.unit,m.min_qty,m.rate,m.qty*m.rate,getStatus(m).label,m.supplier||'']);
+  const csv=[headers,...rows].map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='HRG_Inventory_'+today+'.csv';a.click();toast('CSV exported!');
+}
+
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+
+checkAuth();
+</script>
+</body>
+</html>
